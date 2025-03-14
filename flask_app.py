@@ -32,7 +32,6 @@ def get_computer_move_local(board, depth=5):
 		engine_path = get_engine(app.config['ENGINES_DIR'])
 		engine = chess.engine.SimpleEngine.popen_uci(engine_path)
 		result = engine.play(board, chess.engine.Limit(depth=depth))
-		app.logger.debug(f"Engine move: {result.move}")
 		return result.move
 	except Exception as e:
 		app.logger.error(f"Engine error: {e}")
@@ -80,6 +79,7 @@ def make_move():
 	# Make player's move if it's legal
 	player_move = chess.Move.from_uci(from_square + to_square)
 	if player_move in board.legal_moves:
+		app.logger.debug(f"Player move: {player_move}")
 		board.push(player_move)
 
 		# Check if game is over after player's move
@@ -90,6 +90,7 @@ def make_move():
 		computer_move = get_computer_move_local(board)
 		# computer_move = get_computer_move_api(board)
 		if computer_move:
+			app.logger.debug(f"Computer move: {computer_move}")
 			board.push(computer_move)
 			return jsonify({'fen': board.fen(), 'legal': True, 'game_over': board.is_game_over(), 'computer_move': computer_move.uci()})
 
