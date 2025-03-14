@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 import chess
 import chess.engine
 import os
+import requests
 
 app = Flask(__name__)
 
@@ -10,6 +11,10 @@ board = chess.Board()
 
 # Get the absolute path to the engines directory
 ENGINES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'engines', 'stockfish')
+# Add these constants at the top of your file
+LICHESS_API_URL = "https://lichess.org/api"
+# Get API token from environment variable for security
+LICHESS_API_TOKEN = os.getenv('LICHESS_API_TOKEN')
 
 
 # Initialize Stockfish engine
@@ -36,7 +41,7 @@ def index():
 	return render_template('index.html')
 
 
-def find_best_move(board, depth=3):
+def get_computer_move_local(board, depth=3):
 	try:
 		with get_engine() as engine:
 			result = engine.play(board, chess.engine.Limit(depth=depth))
@@ -45,6 +50,38 @@ def find_best_move(board, depth=3):
 	except Exception as e:
 		app.logger.info(f"Engine error: {e}")
 		return None
+
+
+def get_computer_move(board, depth=20):
+	"""Get best move using Lichess API"""
+	try:
+		headers = {"Authorization": f"Bearer {LICHESS_API_TOKEN}", "Content-Type": "application/json"}
+
+		params = {"fen": board.fen(), "depth": depth, "multiPv": 1}
+
+		response = requests.get(f"{LICHESS_API_URL}/cloud-eval", headers=headers, params=params)
+
+		if response.status_code == 200:
+			data = response.json()
+			if "pvs" in data and len(data["pvs"]) > 0:
+				best_move = data["pvs"][0]["moves"].split()[0]
+				return chess.Move.from_uci(best_move)
+		return None
+
+	except Exception as e:
+		app.logger.error(f"API error: {e}")
+		return None
+
+
+def get_computer_move_with_fallback(board):
+	# Try Lichess API first
+	move = get_computer_move(board)
+	if move:
+		return move
+
+	# Fallback to another service or local engine if needed
+	# Implement alternative move generation here
+	return None
 
 
 @app.route('/make_move', methods=['POST'])
@@ -63,7 +100,8 @@ def make_move():
 			return jsonify({'fen': board.fen(), 'legal': True, 'game_over': True, 'computer_move': None})
 
 		# Make computer's move
-		computer_move = find_best_move(board)
+		# computer_move = find_best_move(board)
+		computer_move = get_computer_move(board)
 		if computer_move:
 			board.push(computer_move)
 			return jsonify({'fen': board.fen(), 'legal': True, 'game_over': board.is_game_over(), 'computer_move': computer_move.uci()})
