@@ -18,6 +18,7 @@ def get_engine():
 		engine_path = os.path.join(ENGINES_DIR, "stockfish-windows-x86-64.exe")
 	else:  # Linux/Mac
 		engine_path = os.path.join(ENGINES_DIR, "stockfish")
+		app.logger.info(f"Engine path: {engine_path}")
 
 	# Verify engine exists
 	if not os.path.exists(engine_path):
@@ -35,13 +36,14 @@ def index():
 	return render_template('index.html')
 
 
-def find_best_move(board, depth=10):
+def find_best_move(board, depth=3):
 	try:
 		with get_engine() as engine:
 			result = engine.play(board, chess.engine.Limit(depth=depth))
+			app.logger.info(f"Engine move: {result.move}")
 			return result.move
 	except Exception as e:
-		print(f"Engine error: {e}")
+		app.logger.info(f"Engine error: {e}")
 		return None
 
 
