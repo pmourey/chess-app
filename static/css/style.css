@@ -1,0 +1,45 @@
+.chess-board {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    border: 2px solid #333;
+}
+.square {
+    width: 12.5%;
+    padding-bottom: 12.5%;
+    float: left;
+    position: relative;
+}
+.white {
+    background-color: rgb(240, 217, 181);
+}
+.black {
+    background-color: rgb(181, 136, 99);
+}
+.piece {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: calc(min(8vw, 64px)); /* Responsive but with max size */
+    line-height: 0; /* Removes extra space around the character */
+    user-select: none; /* Prevent text selection */
+}
+
+/* Highlight selected square */
+.square.selected {
+    background-color: rgba(255, 255, 0, 0.5) !important;
+}
+
+/* Media query for larger screens */
+@media (min-width: 640px) {
+    .chess-board {
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .piece {
+        font-size: 56px; /* Fixed size on larger screens */
+    }
+}
