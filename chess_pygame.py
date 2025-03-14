@@ -1,6 +1,10 @@
+import os
+
 import chess
 import chess.engine
 import pygame
+
+from common import get_engine
 
 SQUARE_SIZE = 80  # Made smaller for better display
 BOARD_SIZE = 8
@@ -39,9 +43,10 @@ def get_square_from_mouse(pos):
 
 
 def find_best_move(board, engine_path="stockfish"):
-	with chess.engine.SimpleEngine.popen_uci(engine_path) as engine:
-		result = engine.play(board, chess.engine.Limit(time=0.1))
-		return result.move
+	engine_path = get_engine(engine_path)
+	engine = chess.engine.SimpleEngine.popen_uci(engine_path)
+	result = engine.play(board, chess.engine.Limit(time=0.1))
+	return result.move
 
 
 # Define the piece images
@@ -169,7 +174,8 @@ def main():
 
 	board = chess.Board()
 	images = load_piece_images()
-	engine_path = "engines/stockfish/stockfish"
+	# engine_path = "engines/stockfish/stockfish"
+	engine_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'engines', 'stockfish')
 	selected_square = None
 
 	running = True
