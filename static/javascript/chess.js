@@ -25,14 +25,6 @@ function createBoard() {
     }
 }
 
-function getPieceUnicodeOld(piece) {
-    const pieces = {
-        'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚',
-        'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔'
-    };
-    return pieces[piece.type + (piece.color === 'w' ? 'P' : 'p')];
-}
-
 function getPieceUnicode(piece) {
     const pieces = {
         'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚',
