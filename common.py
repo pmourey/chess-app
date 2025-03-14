@@ -11,7 +11,7 @@ def get_engine(engine_path: str) -> str:
 		if system == "Darwin":  # macOS
 			engine_path = os.path.join(engine_path, "stockfish")
 		elif system == "Linux":
-			engine_path = os.path.join(engine_path, "stockfish-ubuntu-x86-64-avx2")
+			engine_path = os.path.join(engine_path, "stockfish-ubuntu-x86-64-22.04.1")
 		else:
 			raise OSError(f"Unsupported operating system: {system}")
 
