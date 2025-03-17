@@ -25,6 +25,24 @@ function createBoard() {
     }
 }
 
+
+
+function resetGame() {
+    fetch('/reset', {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Use the proper method to set position
+            board.position(data.fen);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+
+
 function getPieceUnicode(piece) {
     const pieces = {
         'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚',
