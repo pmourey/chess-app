@@ -1,9 +1,8 @@
-import platform
+from time import perf_counter
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, session
 import chess
 import chess.engine
-import os
 import requests
 
 from common import get_engine
@@ -21,17 +20,41 @@ LICHESS_API_URL = app.config['LICHESS_API_URL']
 # Get API token from environment variable for security
 LICHESS_API_TOKEN = app.config['LICHESS_API_TOKEN']
 
+app.secret_key = app.config['SECRET_KEY']  # Make sure this is set in your config
+
 
 @app.route('/')
 def index():
+	if 'board_fen' not in session:
+		session['board_fen'] = chess.Board().fen()
 	return render_template('index.html')
 
 
-def get_computer_move_local(board, depth=5):
+def get_board():
+	if 'board_fen' not in session:
+		session['board_fen'] = chess.Board().fen()
+	return chess.Board(session['board_fen'])
+
+
+def save_board(board):
+	session['board_fen'] = board.fen()
+
+
+@app.route('/reset', methods=['POST'])
+def reset_game():
+	session['board_fen'] = chess.Board().fen()
+	return jsonify({'status': 'success', 'fen': session['board_fen']})
+
+
+def get_computer_move_local(board, depth=10):
 	try:
 		engine_path = get_engine(app.config['ENGINES_DIR'])
 		engine = chess.engine.SimpleEngine.popen_uci(engine_path)
+		tic = perf_counter()
 		result = engine.play(board, chess.engine.Limit(depth=depth))
+		elapsed_time_ms = (perf_counter() - tic) * 1000  # Convert to milliseconds
+		app.logger.debug(f"Time taken for computer move (Depth {depth}): {elapsed_time_ms:.2f} ms")
+		# engine.quit()  # Make sure to close the engine
 		return result.move
 	except Exception as e:
 		app.logger.error(f"Engine error: {e}")
@@ -42,18 +65,14 @@ def get_computer_move_api(board, depth=20):
 	"""Get best move using Lichess API"""
 	try:
 		headers = {"Authorization": f"Bearer {LICHESS_API_TOKEN}", "Content-Type": "application/json"}
-
 		params = {"fen": board.fen(), "depth": depth, "multiPv": 1}
-
 		response = requests.get(f"{LICHESS_API_URL}/cloud-eval", headers=headers, params=params)
-
 		if response.status_code == 200:
 			data = response.json()
 			if "pvs" in data and len(data["pvs"]) > 0:
 				best_move = data["pvs"][0]["moves"].split()[0]
 				return chess.Move.from_uci(best_move)
 		return None
-
 	except Exception as e:
 		app.logger.error(f"API error: {e}")
 		return None
