@@ -1,6 +1,6 @@
 ## Basic chess engine using Pygame and Stockfish
     
-    http://philrg.pythonanywere.com
+    http://philrg.pythonanywhere.com
 
 ### Install required modules
     pip install -r requirements.txt
